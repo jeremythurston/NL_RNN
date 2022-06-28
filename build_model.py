@@ -1,6 +1,7 @@
 from tensorflow import keras
 from tensorflow.keras import layers, optimizers, losses
 
+
 def build_model(pts: int, lr: float, window: int):
     """
     Parameters:

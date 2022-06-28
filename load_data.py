@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def load_data(filename: str):
     """
     Parameters:
