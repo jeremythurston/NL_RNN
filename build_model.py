@@ -1,10 +1,9 @@
 from tensorflow import keras
 from keras import layers, optimizers, losses
+from kerastuner.engine.hyperparameters import HyperParameters
 
 
-def build_model(
-    pts: int, lr: float, window: int, gru_size: int, dense_size: int
-) -> keras.Model():
+def build_model(hp) -> keras.Model():
     """Builds the neural network.
 
     Parameters:
@@ -20,14 +19,25 @@ def build_model(
 
     model = keras.Sequential()
 
-    model.add(layers.GRU(gru_size, activation="relu"))
-    model.add(layers.Dense(dense_size, activation="relu"))
-    model.add(layers.Dense(dense_size, activation="relu"))
-    model.add(layers.Dense(pts, activation="sigmoid"))
+    model.add(
+        layers.GRU(
+            hp.Int("gru_nodes", min_value=64, max_value=256, step=64), activation="relu"
+        )
+    )
+    for i in range(hp.Int("dense_layers", min_value=0, max_value=4)):
+        model.add(
+            layers.Dense(
+                hp.Int(f"dense_nodes_{i}", min_value=64, max_value=256, step=64),
+                activation="relu",
+            )
+        )
 
-    model.summary()
+    # change 256 with the number of points in the simulation
+    model.add(layers.Dense(256, activation="sigmoid"))
 
-    optimizer = optimizers.Adam(lr)
+    optimizer = optimizers.Adam(
+        hp.Float("lr", min_value=1e-6, max_value=1e-3, sampling="log")
+    )
     loss = losses.MeanSquaredError()
 
     model.compile(optimizer=optimizer, loss=loss, metrics=["mse"])
