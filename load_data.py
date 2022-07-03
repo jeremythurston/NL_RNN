@@ -2,7 +2,8 @@ import numpy as np
 
 
 def load_data(filename: str):
-    """
+    """Loads data from the corresponding folder.
+
     Parameters:
     filename (string): relative filename of numpy data
 

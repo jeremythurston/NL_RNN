@@ -1,7 +1,9 @@
 import matplotlib.pyplot as plt
+from keras import callbacks
 
 
-def plot_history(history):
+def plot_history(history: callbacks.History()) -> None:
+    """ """
     plt.rcParams["font.sans-serif"] = "Helvetica"
     plt.rcParams["font.size"] = 14
     plt.rcParams["figure.figsize"] = (10, 6)
