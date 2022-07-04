@@ -16,9 +16,31 @@ NL RNN was written using the following versions:
 
 
 ## Usage
-To loop over parameters to find the optimal model with the [KerasTuner](https://keras.io/keras_tuner/) module, run
+Generation of a trainable dataset can be done with the command
 ```sh
-python3 NL_RNN\main.py
+python3 .\generate_data.py
+```
+To make a variable parameter, simply loop over the array, such as
+```python
+for fwhm in np.linspace(100, 200, 64):
+    # Run NLSE simulation
+    # Save data
+```
+This script will generate a full list of ```.csv``` files inside ```\NL_RNN\testing_data\```. Each ```.csv``` will be of the form
+```
+{
+    'fwhm':      # pulse duration in ps (float),
+    'epp':       # energy per pulse in J (float),
+    'AW':        # input pulse spectral profile (pts x 1),
+    'AT':        # input pulse temporal profile (pts x 1),
+    'pulse_AW':  # evolution of spectrum (pts x steps),
+    'pulse_AT':  # evolution of temporal profile (pts x steps)
+}
+```
+
+To loop over hyperparameters to find the optimal model with the [KerasTuner](https://keras.io/keras_tuner/) module, run
+```sh
+python3 .\main.py
 ```
 Once the optimal model is saved, 
 

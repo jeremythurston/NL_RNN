@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import time
 import build_model
 from tensorflow import keras
@@ -23,7 +25,7 @@ def main():
     tuner = RandomSearch(
         build_model.build_model,
         objective="val_accuracy",
-        max_trials=3,
+        max_trials=64,
         executions_per_trial=3,
         directory=LOG_DIR,
     )

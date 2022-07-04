@@ -17,11 +17,14 @@ def build_model(hp) -> keras.Model():
     model (keras.Model()): the neural network model class
     """
 
+    window = hp.Int("window_size", min_value=5, max_value=20)
+    pts = 2**13
+
     model = keras.Sequential()
 
     model.add(
         layers.GRU(
-            hp.Int("gru_nodes", min_value=64, max_value=256, step=64), activation="relu"
+            hp.Int("gru_nodes", min_value=64, max_value=256, step=64), activation="relu", input_shape=(window, pts)
         )
     )
     for i in range(hp.Int("dense_layers", min_value=0, max_value=4)):
@@ -31,9 +34,7 @@ def build_model(hp) -> keras.Model():
                 activation="relu",
             )
         )
-
-    # change 256 with the number of points in the simulation
-    model.add(layers.Dense(256, activation="sigmoid"))
+    model.add(layers.Dense(2**13, activation="sigmoid"))
 
     optimizer = optimizers.Adam(
         hp.Float("lr", min_value=1e-6, max_value=1e-3, sampling="log")
