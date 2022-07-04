@@ -25,7 +25,7 @@ def main():
         objective="val_accuracy",
         max_trials=3,
         executions_per_trial=3,
-        directory=LOG_DIR
+        directory=LOG_DIR,
     )
 
     tuner.search(
@@ -34,7 +34,7 @@ def main():
         epochs=10,
         batch_size=64,
         validation_split=validation_split,
-        callbacks=[TensorBoard(LOG_DIR)]
+        callbacks=[TensorBoard(LOG_DIR)],
     )
 
     # model.fit(
