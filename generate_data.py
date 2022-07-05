@@ -3,15 +3,15 @@
 import numpy as np
 import pynlo
 import time
-import csv
+import os
 from tqdm import tqdm
 
 
 def main():
     # pulse parameters
-    fwhm_list = np.linspace(start=0.100, stop=0.200, num=64)
+    fwhm_list = np.linspace(start=0.100, stop=0.200, num=32)
     wl = 1030  # pulse central wavelength (nm)
-    epp_list = np.linspace(start=10e-12, stop=100e-12, num=64)
+    epp_list = np.linspace(start=10e-12, stop=100e-12, num=32)
     gdd = 0.0  # group delay dispersion (ps^2)
     tod = 0.0  # third order dispersion (ps^3)
     frep = 1  # repetition rate (MHz)
@@ -19,7 +19,9 @@ def main():
     # simulation parameters
     window = 10.0  # simulation window (ps)
     steps = 100  # simulation steps
-    points = 2**13  # simulation points
+    points = 2**11  # simulation points
+    batch_size = fwhm_list.size * epp_list.size  # number of total simulations
+    rnn_window = 10
 
     # fiber parameters
     beta2 = -120  # (ps^2/km)
@@ -35,17 +37,23 @@ def main():
     raman = True  # enable Raman effect?
     steep = True  # enable self steepening?
 
+    # generate arrays to store data
+    x_pulse_AW = np.zeros((batch_size, points), dtype=complex)
+    x_pulse_AT = np.zeros((batch_size, points), dtype=complex)
+    y_AW = np.zeros((batch_size, points, steps), dtype=complex)
+    y_AT = np.zeros((batch_size, points, steps), dtype=complex)
+
+    pathdir = f"./testing_data/nlse__{batch_size}sims__fwhm-{np.min(fwhm_list)*1e3:.1f}-{np.max(fwhm_list)*1e3:.1f}fs__epp-{np.min(epp_list)*1e9:.2e}-{np.max(epp_list)*1e9:.2e}nJ__time-{int(time.time())}/"
+    os.makedirs(pathdir)
+
     # run simulation for each parameter
-    for fwhm in tqdm(fwhm_list):
-        for epp in epp_list:
-            # create file
-            path_dir = "testing_data/"
-            filename = f"nlse_fwhm-{fwhm*1e3:.2f}fs_epp-{epp*1e9:.3e}nJ_time-{int(time.time())}"
-            data = {}
+    for i, fwhm in enumerate(tqdm(fwhm_list)):
+        for j, epp in enumerate(epp_list):
+            idx = int(i * fwhm_list.size / 32 + j * epp_list.size / 32 - 1)
 
             # create pulse
             pulse = pynlo.light.DerivedPulses.SechPulse(
-                power=1,  # power will be scaled by set_epp()
+                power=1,
                 T0_ps=fwhm / 1.76,
                 center_wavelength_nm=wl,
                 time_window_ps=window,
@@ -77,18 +85,33 @@ def main():
             )
             _, AW, AT, _ = evol.propagate(pulse_in=pulse, fiber=fiber, n_steps=steps)
 
-            # save data
-            data["pulse_AW"] = pulse.AW
-            data["pulse_AT"] = pulse.AT
-            data["fwhm"] = fwhm
-            data["epp"] = epp
-            data["AW"] = AW
-            data["AT"] = AT
+            x_pulse_AW[idx, :] = pulse.AW
+            x_pulse_AT[idx, :] = pulse.AT
+            y_AW[idx, :, :] = AW
+            y_AT[idx, :, :] = AT
 
-            with open(path_dir + filename + ".csv", "w") as f:
-                w = csv.DictWriter(f, data.keys())
-                w.writeheader()
-                w.writerow(data)
+    # normalize data
+    x_pulse_AW = x_pulse_AW / np.max(np.absolute(x_pulse_AW))
+    x_pulse_AT = x_pulse_AT / np.max(np.absolute(x_pulse_AT))
+    y_AW = y_AW / np.max(np.absolute(y_AW))
+    y_AT = y_AT / np.max(np.absolute(y_AT))
+
+    # duplicate first row (rnn_window) times
+    x_pulse_AW = np.repeat(x_pulse_AW[:, np.newaxis, :], rnn_window, axis=1)
+    x_pulse_AT = np.repeat(x_pulse_AW[:, np.newaxis, :], rnn_window, axis=1)
+    # surely there's a faster way to do this
+    temp = y_AW[:, :, 0]
+    temp2 = np.repeat(temp[:, :, np.newaxis], rnn_window, axis=2)
+    y_AW = np.append(temp2, y_AW, axis=2)
+    temp = y_AT[:, :, 0]
+    temp2 = np.repeat(temp[:, :, np.newaxis], rnn_window, axis=2)
+    y_AT = np.append(temp2, y_AT, axis=2)
+
+    # save data
+    np.save(pathdir + "x_pulse_AW.npy", x_pulse_AW)
+    np.save(pathdir + "x_pulse_AT.npy", x_pulse_AT)
+    np.save(pathdir + "y_AW.npy", y_AW)
+    np.save(pathdir + "y_AT.npy", y_AT)
 
 
 if __name__ == "__main__":

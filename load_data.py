@@ -1,20 +1,24 @@
+import glob
+import os
+import pickle
 import numpy as np
+import pandas as pd
 
 
-def load_data(filename: str):
-    """Loads data from the corresponding folder.
-
-    Parameters:
-    filename (string): relative filename of numpy data
+def load_data(data_folder: str):
+    """Loads data from the /testing_data/ folder.
 
     Returns:
-    pts (integer): number of grid points in simulation
-    train_in (numpy.array()): array of training input data
-    train_out (numpy.array()): array of training output data
-    test_in (numpy.array()): array of testing input data
-    test_out (numpy.array()): array of testing output data
+    x_train (numpy.array()): array of training input data
+    y_train (numpy.array()): array of training output data
     """
 
-    data = np.loadtxt(filename, dtype=float)
+    data_dir = "./testing_data" + data_folder
 
-    return pts, train_in, train_out, test_in, test_out
+    x_train = np.load(data_dir + "x_pulse_AT.npy")
+    y_train = np.load(data_dir + "y_AT.npy")
+
+    print(f"x_train shape: {x_train.shape}")
+    print(f"y_train shape: {y_train.shape}")
+
+    return x_train, y_train
