@@ -10,9 +10,11 @@ from kerastuner.tuners import RandomSearch
 
 def main():
     validation_split = 0.333
-    epochs = 10
-    batch_size = 64
-    data_folder = "/nlse__1024sims__fwhm-100.0-200.0fs__epp-1.00e-02-1.00e-01nJ__time-1656998467/"
+    epochs = 20
+    batch_size = 32
+    data_folder = (
+        "/nlse__1024sims__fwhm-100.0-200.0fs__epp-1.00e-02-1.00e-01nJ__time-1657159783/"
+    )
     LOG_DIR = "logs/"
 
     x_train, y_train = load_data.load_data(data_folder)
@@ -29,7 +31,7 @@ def main():
     # Use tuner to find best model
     tuner = RandomSearch(
         build_model.build_model,
-        objective="val_accuracy",
+        objective="val_mse",
         max_trials=64,
         executions_per_trial=3,
         directory=LOG_DIR,

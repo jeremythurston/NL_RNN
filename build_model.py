@@ -14,30 +14,30 @@ def build_model(hp) -> keras.Model():
     # TODO: somehow get these from load_data or generate_data
     window = 10
     pts = 2**11
+    steps = 100
 
     model = keras.Sequential()
 
     model.add(
         layers.GRU(
-            hp.Int("gru_nodes", min_value=64, max_value=256, step=64),
+            hp.Int("gru_nodes", min_value=32, max_value=128, step=32),
             activation="relu",
             input_shape=(window, pts),
         )
     )
-    for i in range(hp.Int("dense_layers", min_value=0, max_value=4)):
+    for i in range(hp.Int("dense_layers", min_value=3, max_value=6)):
         model.add(
             layers.Dense(
-                hp.Int(f"dense_nodes_{i}", min_value=64, max_value=256, step=64),
+                hp.Int(f"dense_nodes_{i}", min_value=32, max_value=128, step=32),
                 activation="relu",
             )
         )
-    model.add(layers.Dense(pts, activation="sigmoid"))
+    model.add(layers.Dense(pts * (steps + window), activation="sigmoid"))
+    model.add(layers.Reshape((steps + window, pts)))
 
-    optimizer = optimizers.Adam(
-        hp.Float("lr", min_value=1e-6, max_value=1e-3, sampling="log")
-    )
+    optimizer = optimizers.Adam(1e-4)
     loss = losses.MeanSquaredError()
 
-    model.compile(optimizer=optimizer, loss=loss, metrics=["mse"])
+    model.compile(optimizer=optimizer, loss=loss, metrics=["mse", "mae"])
 
     return model

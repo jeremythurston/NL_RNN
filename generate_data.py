@@ -98,14 +98,17 @@ def main():
 
     # duplicate first row (rnn_window) times
     x_pulse_AW = np.repeat(x_pulse_AW[:, np.newaxis, :], rnn_window, axis=1)
-    x_pulse_AT = np.repeat(x_pulse_AW[:, np.newaxis, :], rnn_window, axis=1)
+    x_pulse_AT = np.repeat(x_pulse_AT[:, np.newaxis, :], rnn_window, axis=1)
+
     # surely there's a faster way to do this
     temp = y_AW[:, :, 0]
     temp2 = np.repeat(temp[:, :, np.newaxis], rnn_window, axis=2)
     y_AW = np.append(temp2, y_AW, axis=2)
+    y_AW = np.swapaxes(y_AW, 1, 2)
     temp = y_AT[:, :, 0]
     temp2 = np.repeat(temp[:, :, np.newaxis], rnn_window, axis=2)
     y_AT = np.append(temp2, y_AT, axis=2)
+    y_AT = np.swapaxes(y_AT, 1, 2)
 
     # save data
     np.save(pathdir + "x_pulse_AW.npy", x_pulse_AW)
