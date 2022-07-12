@@ -19,7 +19,7 @@ def main():
     # simulation parameters
     window = 10.0  # simulation window (ps)
     steps = 100  # simulation steps
-    points = 2**11  # simulation points
+    points = 2**10  # simulation points
     batch_size = fwhm_list.size * epp_list.size  # number of total simulations
     rnn_window = 10
 
@@ -99,7 +99,6 @@ def main():
     # duplicate first row (rnn_window) times
     x_pulse_AW = np.repeat(x_pulse_AW[:, np.newaxis, :], rnn_window, axis=1)
     x_pulse_AT = np.repeat(x_pulse_AT[:, np.newaxis, :], rnn_window, axis=1)
-
     # surely there's a faster way to do this
     temp = y_AW[:, :, 0]
     temp2 = np.repeat(temp[:, :, np.newaxis], rnn_window, axis=2)

@@ -13,22 +13,23 @@ def build_model(hp) -> keras.Model():
 
     # TODO: somehow get these from load_data or generate_data
     window = 10
-    pts = 2**11
+    pts = 2**10
     steps = 100
 
     model = keras.Sequential()
 
     model.add(
         layers.GRU(
-            hp.Int("gru_nodes", min_value=32, max_value=128, step=32),
+            hp.Int("gru_nodes", min_value=128, max_value=1152, step=512),
             activation="relu",
             input_shape=(window, pts),
         )
     )
-    for i in range(hp.Int("dense_layers", min_value=3, max_value=6)):
+    for i in range(hp.Int("dense_layers", min_value=5, max_value=8)):
+        model.add(layers.Dropout(0.5))
         model.add(
             layers.Dense(
-                hp.Int(f"dense_nodes_{i}", min_value=32, max_value=128, step=32),
+                hp.Int(f"dense_nodes_{i+1}", min_value=128, max_value=1152, step=512),
                 activation="relu",
             )
         )
