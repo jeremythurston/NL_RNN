@@ -1,10 +1,9 @@
-#!/usr/bin/env python3
-
-import time
 import build_model
 import load_data
+import plot_results
 import pynlo
 import matplotlib.pyplot as plt
+import numpy as np
 from tensorflow import keras
 from keras.callbacks import TensorBoard, ReduceLROnPlateau
 from kerastuner.tuners import RandomSearch
@@ -19,21 +18,7 @@ def train_models():
     epochs = 10
     batch_size = 32
 
-    DATA_DIR = (
-        "/nlse__1024sims__fwhm-100.0-200.0fs__epp-1.00e-02-1.00e-01nJ__time-1657572657/"
-    )
-    LOG_DIR = "logs/"
-
     x_train, y_train = load_data.load_data(DATA_DIR)
-
-    # Generate log file for callbacks
-    # NAME = f"NL_RNN_lr-{lr}_window-{window}_grusize-{gru_size}_densesize-{dense_size}_time-{int(time.time())}"
-    # tensorboard = TensorBoard(log_dir=f"logs/{NAME}")
-
-    # Build model
-    # model = build_model.build_model(
-    #     pts=pts, lr=lr, window=window, gru_size=gru_size, dense_size=dense_size
-    # )
 
     # Reduce learning rate on plateau
     reduce_lr = ReduceLROnPlateau(
@@ -44,8 +29,8 @@ def train_models():
     tuner = RandomSearch(
         build_model.build_model,
         objective="val_mse",
-        max_trials=5,
-        executions_per_trial=2,
+        max_trials=1,
+        executions_per_trial=1,
         directory=LOG_DIR,
     )
 
@@ -64,7 +49,7 @@ def train_models():
     # Create model
     model = tuner.hypermodel.build(best_hps)
 
-    # Make prediction with best model
+    # Train best model
     history = model.fit(
         x=x_train,
         y=y_train,
@@ -73,17 +58,35 @@ def train_models():
         callbacks=[TensorBoard(LOG_DIR)],
     )
 
-    plt.figure()
+    plot_results.plot_results(history)
 
-    plt.plot(history.history["val_mse"])
-    plt.xlabel("Epochs")
-    plt.ylabel("Validation MSE")
-    plt.yscale("log")
+    # REFORMAT BELOW
+    # --------------
+    test_pulse, freqs = get_pulse()
+    prediction = model.predict(test_pulse)
+    ev = freqs * 0.004136  # THz to eV
+
+    plt.style.use(["science", "nature", "bright"])
+
+    _, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
+
+    ax1.plot(ev, np.absolute(np.transpose(test_pulse[0, :])))
+    ax1.set_xlabel("Photon energy (eV)")
+    ax1.set_title("Prediction input")
+
+    ax2.imshow(prediction[0, :, :], aspect="auto", cmap="jet")
+    ax2.set_title("Prediction output")
+
+    ax3.plot(x_train[0, 0, :] / np.max(x_train[0, 0, :]))
+    ax3.set_title("Train input")
+
+    ax4.imshow(np.absolute(y_train[0, :, :]), aspect="auto", cmap="jet")
+    ax4.set_title("Train output")
 
     plt.show()
 
 
-def make_prediction(model):
+def get_pulse():
     plt.style.use(["science", "nature", "bright"])
 
     # Parameters
@@ -95,6 +98,7 @@ def make_prediction(model):
     points = 2**10
     frep = 1
     epp = 50e-12
+    rnn_window = 10
 
     pulse = pynlo.light.DerivedPulses.SechPulse(
         power=1,
@@ -111,11 +115,9 @@ def make_prediction(model):
 
     pulse_profile = pulse.AT
 
-    prediction = model.predict(pulse_profile)
+    pulse_profile = pulse_profile / np.max(np.absolute(pulse_profile))
+    pulse_profile = np.repeat(
+        pulse_profile[np.newaxis, np.newaxis, :], rnn_window, axis=1
+    )
 
-    plt.imshow(prediction)
-    plt.show()
-
-
-if __name__ == "__main__":
-    train_models()
+    return pulse_profile, pulse.F_THz

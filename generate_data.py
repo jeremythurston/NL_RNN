@@ -1,13 +1,10 @@
-#!/usr/bin/env python3
-
 import numpy as np
 import pynlo
-import time
 import os
 from tqdm import tqdm
 
 
-def main():
+def generate_data(DATA_DIR):
     # pulse parameters
     fwhm_list = np.linspace(start=0.100, stop=0.200, num=32)
     wl = 1030  # pulse central wavelength (nm)
@@ -43,8 +40,7 @@ def main():
     y_AW = np.zeros((batch_size, points, steps), dtype=complex)
     y_AT = np.zeros((batch_size, points, steps), dtype=complex)
 
-    pathdir = f"./testing_data/nlse__{batch_size}sims__fwhm-{np.min(fwhm_list)*1e3:.1f}-{np.max(fwhm_list)*1e3:.1f}fs__epp-{np.min(epp_list)*1e9:.2e}-{np.max(epp_list)*1e9:.2e}nJ__time-{int(time.time())}/"
-    os.makedirs(pathdir)
+    os.makedirs(DATA_DIR)
 
     # run simulation for each parameter
     for i, fwhm in enumerate(tqdm(fwhm_list)):
@@ -110,11 +106,7 @@ def main():
     y_AT = np.swapaxes(y_AT, 1, 2)
 
     # save data
-    np.save(pathdir + "x_pulse_AW.npy", x_pulse_AW)
-    np.save(pathdir + "x_pulse_AT.npy", x_pulse_AT)
-    np.save(pathdir + "y_AW.npy", y_AW)
-    np.save(pathdir + "y_AT.npy", y_AT)
-
-
-if __name__ == "__main__":
-    main()
+    np.save(DATA_DIR + "x_pulse_AW.npy", x_pulse_AW)
+    np.save(DATA_DIR + "x_pulse_AT.npy", x_pulse_AT)
+    np.save(DATA_DIR + "y_AW.npy", y_AW)
+    np.save(DATA_DIR + "y_AT.npy", y_AT)
