@@ -29,11 +29,15 @@ def load_data(DATA_DIR: str, validation_split: float, test_split: float):
     num_train = int(numel - num_val - num_test)
 
     x_train = input[:num_train, :, :]
-    x_val = input[num_train:num_val, :, :]
-    x_test = input[-num_train:, :, :]
+    x_val = input[num_train : (num_val + num_train), :, :]
+    x_test = input[-num_test:, :, :]
 
     y_train = output[:num_train, :, :]
-    y_val = output[num_train:num_val, :, :]
-    y_test = output[-num_train:, :, :]
+    y_val = output[num_train : (num_val + num_train), :, :]
+    y_test = output[-num_test:, :, :]
+
+    print(f"Training data shape: {x_train.shape}")
+    print(f"Validation data shape: {x_val.shape}")
+    print(f"Testing data shape: {x_test.shape}")
 
     return x_train, y_train, x_val, y_val, x_test, y_test
