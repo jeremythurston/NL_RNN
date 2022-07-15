@@ -13,6 +13,7 @@ NL RNN was written using the following versions:
 * Python 3.9.1
 * TensorFlow 2.9.1
 * Keras 2.9.0
+* PyNLO 0.1.2
 
 
 ## Usage
@@ -20,13 +21,13 @@ Generation of a trainable dataset can be done with the command
 ```sh
 python3 .\generate_data.py
 ```
-To make a variable parameter, simply loop over the array, such as
+To make a variable parameter, simply loop over the array inside `generate_data.py`. For example:
 ```python
-for fwhm in np.linspace(100, 200, 64):
+for fwhm in np.linspace(min=100, max=200, num=64):
     # Run NLSE simulation
-    # Save data
+# Save data
 ```
-This script will generate a full list of ```.csv``` files inside ```\NL_RNN\testing_data\```. Each ```.csv``` will be of the form
+This script will generate a full list of `.npy` files inside `\NL_RNN\testing_data\`. Each `.npy` will be of the form
 ```
 {
     'fwhm':      # pulse duration in ps (float),
@@ -38,9 +39,11 @@ This script will generate a full list of ```.csv``` files inside ```\NL_RNN\test
 }
 ```
 
+The main file in this repository is `RNN_main.ipynb`, which controls the main operations of the file.
+
 To loop over hyperparameters to find the optimal model with the [KerasTuner](https://keras.io/keras_tuner/) module, run
-```sh
-python3 .\main.py
+```python
+from 
 ```
 Once the optimal model is saved, 
 

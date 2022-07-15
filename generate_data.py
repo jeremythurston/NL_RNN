@@ -110,3 +110,9 @@ def generate_data(DATA_DIR):
     np.save(DATA_DIR + "x_pulse_AT.npy", x_pulse_AT)
     np.save(DATA_DIR + "y_AW.npy", y_AW)
     np.save(DATA_DIR + "y_AT.npy", y_AT)
+
+    print("Done generating data. The following files have been created:")
+    print(f"x_pulse_AW.npy: {x_pulse_AW.shape}")
+    print(f"x_pulse_AT.npy: {x_pulse_AT.shape}")
+    print(f"y_AW.npy: {y_AW.shape}")
+    print(f"y_AT.npy: {y_AT.shape}")
