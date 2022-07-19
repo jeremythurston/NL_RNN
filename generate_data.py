@@ -45,7 +45,7 @@ def generate_data(DATA_DIR):
     # run simulation for each parameter
     for i, fwhm in enumerate(tqdm(fwhm_list)):
         for j, epp in enumerate(epp_list):
-            idx = int(i * fwhm_list.size / 32 + j * epp_list.size / 32 - 1)
+            idx = i * fwhm_list.shape[0] + j
 
             # create pulse
             pulse = pynlo.light.DerivedPulses.SechPulse(
